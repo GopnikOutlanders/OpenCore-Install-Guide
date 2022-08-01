@@ -217,7 +217,7 @@ And an important note for **Laptops with discrete GPUs**:
 ## Motherboard Support
 
 For the most part, all motherboards are supported as long as the CPU is. Exceptions are the MSI 500-series AMD motherboards (A520, B550 and X570) on macOS Monterey and above.
-These MSI motherboards will NOT boot macOS after the BIOS update that adds support for Ryzen 5000 series. If you have an earlier series CPU, you can downgrade the BIOS, but keep in mind that stuff like networking will still be broken.
+These MSI motherboards will NOT boot macOS Monterey and above after the BIOS update that adds support for Ryzen 5000 series. If you have an earlier series CPU, you can downgrade the BIOS, but keep in mind that stuff like networking will still be broken.
 We recommended installing macOS Big Sur or earlier on these motherboards.
 
 
