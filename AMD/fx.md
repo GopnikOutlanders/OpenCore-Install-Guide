@@ -280,6 +280,7 @@ Settings relating to the kernel, for us we'll be enabling the following:
 | Quirk | Enabled | Comment |
 | :--- | :--- | :--- |
 | PanicNoKextDump | YES | |
+| LapicKernelPanic | NO | HP Machines will require this quirk |
 | PowerTimeoutKernelPanic | YES | |
 | ProvideCurrentCpuInfo | YES | |
 | XhciPortLimit | NO | Unsupported on AMD systems |
