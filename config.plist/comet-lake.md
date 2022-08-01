@@ -75,7 +75,7 @@ This section is allowing devices to be passthrough to macOS that are generally i
 ::: tip Info
 Settings relating to boot.efi patching and firmware fixes, for us, we need to change the following:
 
-| Quirk | Enabled |
+| Quirk | Enabled | Comment |
 | :--- | :--- |
 | DevirtualiseMmio | YES | |
 | EnableWriteUnprotector | NO | |
