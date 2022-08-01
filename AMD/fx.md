@@ -11,7 +11,6 @@ So making a config.plist may seem hard, it's not. It just takes some time but th
 * **All properties must be defined**, there are no default OpenCore will fall back on so **do not delete sections unless told explicitly so**. If the guide doesn't mention the option, leave it at default.
 * **The Sample.plist cannot be used As-Is**, you must configure it to your system
 * **DO NOT USE CONFIGURATORS**, these rarely respect OpenCore's configuration and even some like Mackie's will add Clover properties and corrupt plists!
-* **MAKE SURE YOUR BIOS IS UP TO DATE!**, macOS will not work correctly (and might not even boot) on day 0 BIOS versions. We recommending updating your BIOS to the latest one. (AMD 15h/16h BIOSes are discontinued anyways, no reason to not have it on the latest version.)
 
 Now with all that, a quick reminder of the tools we need
 
@@ -21,7 +20,7 @@ Now with all that, a quick reminder of the tools we need
   * For generating our SMBIOS data
 * [Sample/config.plist](https://github.com/acidanthera/OpenCorePkg/releases)
   * See previous section on how to obtain: [config.plist Setup](../config.plist/README.md)
-* [AMD Kernel Patches](https://github.com/AMD-OSX/AMD_Vanilla/tree/master)
+* [AMD Kernel Patches](https://github.com/AMD-OSX/AMD_Vanilla)
   * Needed for booting macOS on AMD hardware(save these for later, we'll go over how to use them below)
   * Supporting AMD Family 15h, 16h, 17h and 19h
 
@@ -40,9 +39,8 @@ This is where you'll add SSDTs for your system, these are very important to **bo
 | Required SSDTs | Description |
 | :--- | :--- |
 | **[SSDT-EC-USBX-DESKTOP](https://dortania.github.io/Getting-Started-With-ACPI/)** | Fixes both the embedded controller and USB power, see [Getting Started With ACPI Guide](https://dortania.github.io/Getting-Started-With-ACPI/) for more details. |
-| **[SSDT-BRG0](https://github.com/acidanthera/OpenCorePkg/blob/master/Docs/AcpiSamples/Source/SSDT-BRG0.dsl)** | Use in case you need to spoof your GPU and it's connected with a PCI bridge (check if the ACPI path has a bogus PCI(0000) in Device Manager. There is no prebuilt available for this SSDT. |
-| **[SSDT-SBUS-MCHC](https://dortania.github.io/Getting-Started-With-ACPI/Universal/smbus.html)** | Fixes AppleSMBus support, this should be done in post-install. |
- Note that you **should not** add your generated `DSDT.aml` here, it is already in your firmware. So if present, remove the entry for it in your `config.plist` and under EFI/OC/ACPI.
+
+Note that you **should not** add your generated `DSDT.aml` here, it is already in your firmware. So if present, remove the entry for it in your `config.plist` and under EFI/OC/ACPI.
 
 For those wanting a deeper dive into dumping your DSDT, how to make these SSDTs, and compiling them, please see the [**Getting started with ACPI**](https://dortania.github.io/Getting-Started-With-ACPI/) **page.** Compiled SSDTs have a **.aml** extension(Assembled) and will go into the `EFI/OC/ACPI` folder and **must** be specified in your config under `ACPI -> Add` as well.
 
@@ -230,11 +228,11 @@ Blocks certain kexts from loading. Not relevant for us.
 
 ### Patch
 
-This is where the AMD kernel patching magic happens. Please do note that if coming from Clover, `KernelToPatch` and `MatchOS` from Clover becomes `Kernel` and `MinKernel`/ `MaxKernel` in OpenCore. The latest AMD kernel patches can always be found on the [AMD Vanilla GitHub Repository](https://github.com/AMD-OSX/AMD_Vanilla/tree/master).
+This is where the AMD kernel patching magic happens. Please do note that if coming from Clover, `KernelToPatch` and `MatchOS` from Clover becomes `Kernel` and `MinKernel`/ `MaxKernel` in OpenCore. The latest AMD kernel patches can always be found on the [AMD Vanilla GitHub Repository](https://github.com/AMD-OSX/AMD_Vanilla).
 
 Kernel patches:
 
-* [Bulldozer/Jaguar(15h/16h) + Ryzen/Threadripper(17h/19h)](https://github.com/AMD-OSX/AMD_Vanilla/tree/master) (10.13, 10.14, 10.15, 11.x, 12.x and 13.x)
+* [Bulldozer/Jaguar (15h/16h)](https://github.com/AMD-OSX/AMD_Vanilla) (10.13 - 12.x)
 
 To merge:
 
@@ -282,8 +280,10 @@ Settings relating to the kernel, for us we'll be enabling the following:
 | Quirk | Enabled | Comment |
 | :--- | :--- | :--- |
 | PanicNoKextDump | YES | |
+| LapicKernelPanic | NO | HP Machines will require this quirk |
 | PowerTimeoutKernelPanic | YES | |
 | ProvideCurrentCpuInfo | YES | |
+| XhciPortLimit | NO | Unsupported on AMD systems |
 
 :::
 
@@ -319,7 +319,8 @@ Settings relating to the kernel, for us we'll be enabling the following:
 * **SetApfsTrimTimeout**: `-1`
   * Sets trim timeout in microseconds for APFS filesystems on SSDs, only applicable for macOS 10.14 and newer with problematic SSDs.
 * **XhciPortLimit**: NO
-  * This patch removes macOS' 15 ports per controller limit, using this instead of a proper USB map is absolutely not recommended, a quick guide for USB mapping, even under Windows (not Linux though), can be found here, in USBToolBox's README: [USBToolBox](https://github.com/USBToolBox/tool#usage)
+  * This is actually the 15 port limit patch, which is not supported on AMD systems. We recommend AMD users to [map from Windows](https://github.com/USBToolBox/tool).
+
 :::
 
 ### Scheme
@@ -351,7 +352,20 @@ Settings related to legacy booting(ie. 10.4-10.6), for majority you can skip how
 
 ### Boot
 
-Settings for boot screen (Leave everything as default).
+::: tip Info
+
+| Quirk | Enabled | Comment |
+| :--- | :--- | :--- |
+| HideAuxiliary | YES | Press space to show macOS recovery and other auxiliary entries |
+
+:::
+
+::: details More in-depth Info
+
+* **HideAuxiliary**: YES
+  * This option will hide supplementary entries, such as macOS recovery and tools, in the picker. Hiding auxiliary entries may increase boot performance on multi-disk systems. You can press space at the picker to show these entries
+
+:::
 
 ### Debug
 
@@ -378,8 +392,6 @@ Helpful for debugging OpenCore boot issues:
   * Disables the UEFI watchdog, can help with early boot issues
 * **DisplayLevel**: `2147483650`
   * Shows even more debug information, requires debug version of OpenCore
-* **SerialInit**: NO
-  * Needed for setting up serial output with OpenCore
 * **SysReport**: NO
   * Helpful for debugging such as dumping ACPI tables
   * Note that this is limited to DEBUG versions of OpenCore
@@ -401,7 +413,7 @@ Security is pretty self-explanatory, **do not skip**. We'll be changing the foll
 | AllowSetDefault | YES | |
 | BlacklistAppleUpdate | YES | |
 | ScanPolicy | 0 | |
-| SecureBootModel | Default | Leave this as `Default`, OpenCore will automatically pull the correct value for your SMBIOS then. The next page also goes into more detail about this setting. |
+| SecureBootModel | Default | Leave this as `Default` for OpenCore to automatically set the correct value corresponding to your SMBIOS. The next page goes into more detail about this setting. |
 | Vault | Optional | This is a word, it is not optional to omit this setting. You will regret it if you don't set it to Optional, note that it is case-sensitive |
 
 :::
@@ -431,6 +443,10 @@ Security is pretty self-explanatory, **do not skip**. We'll be changing the foll
   * Note: Users may find upgrading OpenCore on an already installed system can result in early boot failures. To resolve this, see here: [Stuck on OCB: LoadImage failed - Security Violation](/troubleshooting/extended/kernel-issues.md#stuck-on-ocb-loadimage-failed-security-violation)
 
 :::
+
+### Serial
+
+Used for serial debugging (Leave everything as default).
 
 ### Tools
 
@@ -490,7 +506,6 @@ System Integrity Protection bitmask
 | **debug=0x100** | This disables macOS's watchdog which helps prevents a reboot on a kernel panic. That way you can *hopefully* glean some useful info and follow the breadcrumbs to get past the issues. |
 | **keepsyms=1** | This is a companion setting to debug=0x100 that tells the OS to also print the symbols on a kernel panic. That can give some more helpful insight as to what's causing the panic itself. |
 | **npci=0x3000** | This disables some PCI debugging related to `kIOPCIConfiguratorPFM64` and `gIOPCITunnelledKey`. This is an alternative to having Above 4G Decoding enabled in your BIOS. Do not use this unless you don't have it in your BIOS. Required for when getting stuck on `[PCI configuration begin]` as there are IRQ conflicts relating to your PCI lanes. [Source](https://opensource.apple.com/source/IOPCIFamily/IOPCIFamily-370.0.2/IOPCIBridge.cpp.auto.html) |
-| **alcid=1** | Used for setting layout-id for AppleALC, see [supported codecs](https://github.com/acidanthera/applealc/wiki/supported-codecs) to figure out which layout to use for your specific system. More info on this is covered in the [Post-Install Page](https://dortania.github.io/OpenCore-Post-Install/) |
 
 * **GPU-Specific boot-args**:
 
@@ -536,11 +551,8 @@ Forcibly rewrites NVRAM variables, do note that `Add` **will not overwrite** val
 
 ::: details More in-depth Info
 
-* **LegacyOverwrite**: NO
-  * Permits overwriting firmware variables from nvram.plist, only needed for systems without native NVRAM
-
 * **LegacySchema**
-  * Used for assigning NVRAM variables, used with the driver `OpenVariableRuntimeDxe.efi`
+  * Used for assigning NVRAM variables, used with `OpenVariableRuntimeDxe.efi`. Only needed for systems without native NVRAM
 
 * **WriteFlash**: YES
   * Enables writing to flash memory for all added variables.
@@ -593,7 +605,7 @@ The `Apple ROM` part gets copied to Generic -> ROM.
 
 We set Generic -> ROM to either an Apple ROM (dumped from a real Mac), your NIC MAC address, or any random MAC address (could be just 6 random bytes, for this guide we'll use `11223300 0000`. After install follow the [Fixing iServices](https://dortania.github.io/OpenCore-Post-Install/universal/iservices.html) page on how to find your real MAC Address)
 
-**Reminder that you need an invalid serial, you need to get a message back like: "Cannot check coverage for this serial..." when inputting your Serial Number in the [Apple Check Coverage page](https://checkcoverage.apple.com)**
+**Reminder that you need an invalid serial, you need to get a message back like: "unable to check coverage for this serial number." when inputting your Serial Number in the [Apple Check Coverage page](https://checkcoverage.apple.com)**
 
 **Automatic**: YES
 
@@ -737,7 +749,7 @@ For those having booting issues, please make sure to read the [Troubleshooting s
 * Secure Boot
 * Serial/COM Port
 * Parallel Port
-* Compatibility Support Module (CSM)(**Must be off in most cases, GPU errors/stalls like `gIO` are common when this option in enabled**)
+* Compatibility Support Module (CSM)(**Must be off in most cases, GPU errors/stalls like `gIO` are common when this option is enabled**)
 
 ### Enable
 
