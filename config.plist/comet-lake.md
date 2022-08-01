@@ -77,13 +77,13 @@ Settings relating to boot.efi patching and firmware fixes, for us, we need to ch
 
 | Quirk | Enabled |
 | :--- | :--- |
-| DevirtualiseMmio | YES |
-| EnableWriteUnprotector | NO |
-| ProtectUefiServices | YES |
-| RebuildAppleMemoryMap | YES |
+| DevirtualiseMmio | YES | |
+| EnableWriteUnprotector | NO | |
+| ProtectUefiServices | YES | |
+| RebuildAppleMemoryMap | YES | |
 | ResizeAppleGpuBars | 0 | If your firmware supports increasing GPU Bar sizes (ie Resizable Bar Support), set this to `0` |
-| SetupVirtualMap | NO |
-| SyncRuntimePermissions | YES |
+| SetupVirtualMap | NO | |
+| SyncRuntimePermissions | YES | |
 :::
 
 ::: details More in-depth Info
