@@ -299,6 +299,7 @@ Settings relating to the kernel, for us we'll be enabling the following:
 
 | Quirk | Enabled | Comment |
 | :--- | :--- | :--- |
+| LapicKernelPanic | NO | HP Machines will require this quirk |
 | PanicNoKextDump | YES | |
 | PowerTimeoutKernelPanic | YES | |
 | ProvideCurrentCpuInfo | YES | |
